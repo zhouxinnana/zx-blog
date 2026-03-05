@@ -346,7 +346,7 @@ label {
   resize: vertical;
   min-height: 100px;
   
-  &--large {
+  &.form-textarea--large {
     min-height: 300px;
     font-family: var(--font-mono);
     font-size: 0.8125rem;
@@ -382,7 +382,7 @@ label {
     cursor: not-allowed;
   }
   
-  &-primary {
+  &.btn-primary {
     background: var(--accent-primary);
     color: var(--bg-primary);
     
@@ -393,7 +393,7 @@ label {
     }
   }
   
-  &-outline {
+  &.btn-outline {
     background: transparent;
     border: 1px solid var(--border-primary);
     color: var(--text-primary);

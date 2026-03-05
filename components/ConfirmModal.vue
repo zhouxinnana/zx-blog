@@ -162,7 +162,7 @@ defineEmits(['confirm', 'cancel'])
   border: none;
   font-family: var(--font-display);
   
-  &-outline {
+  &.btn-outline {
     background: transparent;
     border: 1px solid var(--border-primary);
     color: var(--text-primary);
@@ -175,7 +175,7 @@ defineEmits(['confirm', 'cancel'])
     }
   }
   
-  &-danger {
+  &.btn-danger {
     background: var(--accent-danger);
     color: var(--bg-primary);
     

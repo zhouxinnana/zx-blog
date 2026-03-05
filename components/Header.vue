@@ -317,15 +317,15 @@ const closeMenu = () => {
     transition: all var(--transition-base);
     border-bottom: 1px solid var(--border-primary);
     
-    &--open {
-      transform: translateY(0);
-      opacity: 1;
-      visibility: visible;
-    }
-    
     &::before {
       display: none;
     }
+  }
+  
+  .nav.nav--open {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
   }
   
   .nav-link {
