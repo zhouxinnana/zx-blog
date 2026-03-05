@@ -1,52 +1,66 @@
 <template>
   <div class="admin-page">
     <div class="container">
-      <h1 class="page-title">文章管理</h1>
-      
-      <div class="admin-actions">
+      <div class="page-header">
+        <h1 class="page-title">
+          <span class="title-icon">⚙️</span>
+          文章管理
+        </h1>
         <button class="btn btn-primary" @click="showCreateModal = true">
+          <span class="btn-icon">➕</span>
           创建新文章
         </button>
       </div>
 
       <div v-if="loading" class="loading">
-        加载中...
+        <div class="loading-spinner"></div>
+        <p class="loading-text">加载中...</p>
       </div>
 
       <div v-else-if="posts.length === 0" class="empty">
-        <p>暂无文章</p>
+        <div class="empty-icon">📭</div>
+        <p class="empty-text">暂无文章</p>
+        <p class="empty-hint">点击上方按钮创建第一篇文章</p>
       </div>
 
-      <div v-else class="posts-table">
-        <table>
-          <thead>
-            <tr>
-              <th>标题</th>
-              <th>分类</th>
-              <th>发布日期</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="post in posts" :key="post._path">
-              <td>
-                <NuxtLink :to="post._path" class="post-link">
-                  {{ post.title }}
-                </NuxtLink>
-              </td>
-              <td>{{ post.category || '-' }}</td>
-              <td>{{ formatDate(post.date) }}</td>
-              <td class="actions">
-                <button class="btn btn-outline btn-sm" @click="editPost(post)">
-                  编辑
-                </button>
-                <button class="btn btn-outline btn-sm btn-danger" @click="confirmDelete(post)">
-                  删除
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div v-else class="posts-list">
+        <TransitionGroup name="post" tag="div" class="posts-list-inner">
+          <div
+            v-for="(post, index) in posts"
+            :key="post._path"
+            class="post-item"
+            :style="{ '--accent-color': getAccentColor(index) }"
+          >
+            <div class="post-main">
+              <NuxtLink :to="post._path" class="post-title">
+                <span class="post-number">{{ index + 1 }}</span>
+                <span class="post-name">{{ post.title }}</span>
+              </NuxtLink>
+              
+              <div class="post-meta">
+                <span v-if="post.category" class="meta-item">
+                  <span class="meta-icon">📂</span>
+                  {{ post.category }}
+                </span>
+                <span class="meta-item">
+                  <span class="meta-icon">📅</span>
+                  {{ formatDate(post.date) }}
+                </span>
+              </div>
+            </div>
+
+            <div class="post-actions">
+              <button class="action-btn action-btn--edit" @click="editPost(post)">
+                <span class="action-icon">✏️</span>
+                <span class="action-text">编辑</span>
+              </button>
+              <button class="action-btn action-btn--delete" @click="confirmDelete(post)">
+                <span class="action-icon">🗑️</span>
+                <span class="action-text">删除</span>
+              </button>
+            </div>
+          </div>
+        </TransitionGroup>
       </div>
     </div>
 
@@ -79,6 +93,12 @@ const deletingPost = ref<any>(null)
 const { data: posts, refresh } = await useAsyncData('admin-posts', () => 
   queryContent('/posts').sort({ date: -1 }).find()
 )
+
+const accentColors = ['#00f0ff', '#7c3aed', '#10b981', '#f59e0b', '#ef4444', '#ec4899']
+
+const getAccentColor = (index: number) => {
+  return accentColors[index % accentColors.length]
+}
 
 const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString('zh-CN', {
@@ -148,129 +168,331 @@ useHead({
 
 <style scoped>
 .admin-page {
-  min-height: 60vh;
+  min-height: 100vh;
+  position: relative;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-2xl) var(--spacing-lg);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
 }
 
 .page-title {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: #1f2937;
-  margin-bottom: 2rem;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  letter-spacing: -0.02em;
 }
 
-.admin-actions {
-  margin-bottom: 2rem;
+.title-icon {
+  font-size: 2rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  border: none;
+  font-family: var(--font-display);
+  
+  &-primary {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    
+    &:hover {
+      background: var(--accent-secondary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-glow);
+    }
+  }
+  
+  &-icon {
+    font-size: 1rem;
+  }
 }
 
 .loading,
 .empty {
   text-align: center;
-  padding: 3rem;
-  color: #6b7280;
-  font-size: 1.125rem;
+  padding: var(--spacing-2xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
 }
 
-.posts-table {
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  overflow: hidden;
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 3px solid var(--border-primary);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-thead {
-  background-color: #f9fafb;
-}
-
-th {
-  padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  color: #374151;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-td {
-  padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-tr:last-child td {
-  border-bottom: none;
-}
-
-.post-link {
-  color: #3b82f6;
-  text-decoration: none;
-  font-weight: 500;
-
-  &:hover {
-    text-decoration: underline;
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 
-.actions {
-  display: flex;
-  gap: 0.5rem;
+.loading-text {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  margin: 0;
 }
 
-.btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 0.375rem;
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.empty-text {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.empty-hint {
   font-size: 0.875rem;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+.posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.posts-list-inner {
+  display: contents;
+}
+
+.post-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--accent-color);
+    opacity: 0;
+    transition: opacity var(--transition-base);
+  }
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-color);
+    
+    &::before {
+      opacity: 1;
+    }
+  }
+}
+
+.post-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.post-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.125rem;
+  transition: color var(--transition-fast);
+  
+  &:hover {
+    color: var(--accent-primary);
+  }
+}
+
+.post-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--accent-primary);
+}
+
+.post-name {
+  flex: 1;
+}
+
+.post-meta {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-family: var(--font-mono);
+}
+
+.meta-icon {
+  font-size: 1rem;
+}
+
+.post-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
-
-  &-sm {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.8125rem;
+  transition: all var(--transition-fast);
+  border: 1px solid var(--border-primary);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
   }
-
-  &-primary {
-    background-color: #3b82f6;
-    color: white;
-
+  
+  &--edit {
     &:hover {
-      background-color: #2563eb;
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+      background: var(--accent-glow);
     }
   }
-
-  &-outline {
-    background-color: transparent;
-    border: 1px solid #d1d5db;
-    color: #374151;
-
+  
+  &--delete {
     &:hover {
-      border-color: #3b82f6;
-      color: #3b82f6;
+      border-color: var(--accent-secondary);
+      color: var(--accent-secondary);
+      background: rgba(124, 58, 237, 0.1);
     }
+  }
+}
 
-    &.btn-danger {
-      &:hover {
-        border-color: #ef4444;
-        color: #ef4444;
-      }
-    }
+.action-icon {
+  font-size: 1rem;
+}
+
+.action-text {
+  font-size: 0.8125rem;
+}
+
+.post-enter-active {
+  transition: all var(--transition-base);
+}
+
+.post-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.post-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 1024px) {
+  .post-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .post-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
 
 @media (max-width: 768px) {
+  .container {
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
   .page-title {
-    font-size: 2rem;
+    font-size: 1.5rem;
   }
-
-  .posts-table {
-    overflow-x: auto;
+  
+  .post-title {
+    font-size: 1rem;
   }
-
-  table {
-    min-width: 600px;
+  
+  .post-item {
+    padding: var(--spacing-md);
+  }
+  
+  .action-text {
+    display: none;
+  }
+  
+  .action-btn {
+    padding: var(--spacing-xs);
   }
 }
 </style>

@@ -1,5 +1,6 @@
 <template>
   <div class="layout">
+    <Particles />
     <Header />
     <main class="main-content">
       <slot />
